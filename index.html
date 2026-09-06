@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- HilltopAds Verification Meta Tag -->
     <meta name="311b46cdfd0da526b592563508ac09d19ebf5c12" content="311b46cdfd0da526b592563508ac09d19ebf5c12" />
     
     <title>Velantin Express Video Hub</title>
@@ -29,20 +30,46 @@
 
         .container { width: 100%; max-width: 850px; }
 
-        /* Banner Ads Layout */
+        /* General Ad Slot Base Styling */
         .ad-slot {
-            width: 100%;
-            min-height: 90px;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 15px 0;
+            margin: 15px auto;
             overflow: hidden;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
             color: #64748b;
             font-size: 0.85rem;
+        }
+
+        /* 1. TOP BANNER AD SLOT (728x90 Large Leaderboard) */
+        #top-ad {
+            width: 100%;
+            max-width: 728px;
+            height: 90px;
+        }
+
+        /* 2. MIDDLE BANNER AD SLOT (300x250 Medium Rectangle Box) */
+        #middle-ad {
+            width: 300px;
+            height: 250px;
+        }
+
+        /* 3. BOTTOM BANNER AD SLOT (320x50 Mobile Banner) */
+        #bottom-ad {
+            width: 100%;
+            max-width: 320px;
+            height: 50px;
+        }
+
+        /* Mobile Responsive Adjustments for Top Ad */
+        @media (max-width: 768px) {
+            #top-ad {
+                max-width: 320px;
+                height: 50px;
+            }
         }
 
         .app-card {
@@ -152,19 +179,9 @@
 
     <div class="container">
         
+        <!-- TOP BANNER AD SLOT -->
         <div class="ad-slot" id="top-ad">
-            <span>[ <script>
-(function(lemsf){
-var d = document,
-    s = d.createElement('script'),
-    l = d.scripts[d.scripts.length - 1];
-s.settings = lemsf || {};
-s.src = "\/\/untimely-hello.com\/b.XhVLsXdmGElG0SYgWQck\/feOmd9mu\/ZhUsl\/krPETEcXzVOYDrQx1rNgjzU\/tIN\/z\/Mp4fNqDpUw2UOhQm";
-s.async = true;
-s.referrerPolicy = 'no-referrer-when-downgrade';
-l.parentNode.insertBefore(s, l);
-})({})
-            </script> ]</span>
+            <span>[ Top Ad Slot - 728x90 ]</span>
         </div>
 
         <div class="app-card">
@@ -177,19 +194,22 @@ l.parentNode.insertBefore(s, l);
             </div>
         </div>
 
+        <!-- MIDDLE BANNER AD SLOT -->
         <div class="ad-slot" id="middle-ad">
-            <span>[ Middle Banner Ad Placement ]</span>
+            <span>[ Middle Ad Slot - 300x250 Box ]</span>
         </div>
 
         <h2 style="font-size: 1.2rem; color: #94a3b8; margin-bottom: 10px;">Uploaded Videos</h2>
         <div id="videoFeed" class="video-grid"></div>
 
+        <!-- BOTTOM BANNER AD SLOT -->
         <div class="ad-slot" id="bottom-ad">
-            <span>[ Bottom Banner Ad Placement ]</span>
+            <span>[ Bottom Ad Slot - 320x50 Mobile ]</span>
         </div>
 
     </div>
 
+    <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -207,8 +227,30 @@ l.parentNode.insertBefore(s, l);
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // HilltopAds Non-Skippable VAST Tag URL
+        // VAST Tag URLs
         const HILLTOP_VAST_URL = "https://unfolded-uncle.com/d.mxFhzKdVGrNEvEZgGgUg/eeImW9PutZbUDlikXPoTacrzTOCDKQZ0ONvD/UTtkNDzbMN4_NcDJQJ0NOsQk";
+        const RICHADS_VAST_TEMPLATE = "http://16793.rtb.adp3.net/pre-roll-rp?pubid=995748&siteid=406408&ip=[IP]&ua=[USER_AGENT]";
+
+        let userIP = "";
+
+        // User IP Address එක ලබාගැනීම
+        async function fetchUserIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                userIP = data.ip;
+            } catch (err) {
+                console.log("Could not fetch IP, using default fallback");
+            }
+        }
+        fetchUserIP();
+
+        // RichAds URL එක Dynamic ලෙස සකස් කිරීම
+        function getRichAdsUrl() {
+            const ua = encodeURIComponent(navigator.userAgent);
+            const ip = encodeURIComponent(userIP || '127.0.0.1');
+            return RICHADS_VAST_TEMPLATE.replace('[IP]', ip).replace('[USER_AGENT]', ua);
+        }
 
         const saveBtn = document.getElementById('saveBtn');
         const videoFeed = document.getElementById('videoFeed');
@@ -247,7 +289,7 @@ l.parentNode.insertBefore(s, l);
             }
         });
 
-        // Videos Fetch කිරීම සහ Non-Skippable Ad Overlay සකස් කිරීම
+        // Videos Fetch කිරීම
         async function fetchVideos() {
             videoFeed.innerHTML = '<p style="color:#aaa; text-align:center;">Loading videos...</p>';
 
@@ -286,9 +328,9 @@ l.parentNode.insertBefore(s, l);
                     `;
                     videoFeed.appendChild(card);
 
-                    // වීඩියෝ එක Play වීමට පටන් අරන් තත්පර 5කින් Skip කළ නොහැකි Ad එක පෙන්වීම
+                    // වීඩියෝ එක Load වී තත්පර 5කින් Ad එක පෙන්වීම
                     setTimeout(() => {
-                        triggerNonSkippableAd(adOverlayId, adIframeId);
+                        triggerNonSkippableAd(adOverlayId, adIframeId, index);
                     }, 5000);
                 });
             } catch (error) {
@@ -296,22 +338,24 @@ l.parentNode.insertBefore(s, l);
             }
         }
 
-        // Non-Skippable Ad Trigger Function
-        function triggerNonSkippableAd(overlayId, iframeContainerId) {
+        // Non-Skippable Ad Trigger Function (Alternating VAST Ads)
+        function triggerNonSkippableAd(overlayId, iframeContainerId, index) {
             const overlay = document.getElementById(overlayId);
             const container = document.getElementById(iframeContainerId);
 
             if (overlay && container) {
                 overlay.style.display = 'flex';
                 
-                // VAST Tag Iframe ඇතුළත් කිරීම
-                container.innerHTML = `<iframe src="${HILLTOP_VAST_URL}" width="100%" height="100%" frameborder="0" scrolling="no" allow="autoplay"></iframe>`;
+                // වීඩියෝ එක අනුව මාරුවෙන් මාරුවට (Alternate) HilltopAds සහ RichAds පෙන්වීම
+                const selectedVastUrl = (index % 2 === 0) ? getRichAdsUrl() : HILLTOP_VAST_URL;
 
-                // තත්පර 10කට පසු Ad එක auto ඉවත් වී Video එක දිගටම ප්ලේ වීමට සැලැස්වීම (Skip Buttons නොමැත)
+                container.innerHTML = `<iframe src="${selectedVastUrl}" width="100%" height="100%" frameborder="0" scrolling="no" allow="autoplay"></iframe>`;
+
+                // තත්පර 10කින් Ad එක Auto ඉවත් වේ
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     container.innerHTML = '';
-                }, 10000); // 10000ms = තත්පර 10 (Ad Duration එක අනුව වෙනස් කළ හැක)
+                }, 10000);
             }
         }
 
