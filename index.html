@@ -226,6 +226,46 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Direct Links List (3 Links)
+        const directLinks = [
+            "https://11745.xml.4armn.com/direct-link-v2?pubid=995748&siteid=406408&linkid=115741",
+            "https://unfolded-uncle.com/d.mxFhzKdVGrNEvEZgGgUg/eeImW9PutZbUDlikXPoTacrzTOCDKQZ0ONvD/UTtkNDzbMN4_NcDJQJ0NOsQk",
+            "https://11745.xml.4armn.com/direct-link-v2?pubid=995748&siteid=406408&linkid=115741"
+        ];
+
+        // Direct Link Smart Frequency Manager (3 Clicks -> 30 Min Cooldown)
+        document.addEventListener('click', function handlePopunderClicks() {
+            const lastCooldownTime = localStorage.getItem('ad_cooldown_time');
+            const currentTime = new Date().getTime();
+            const cooldownDuration = 30 * 60 * 1000; // මිනිත්තු 30 (30 Mins in ms)
+
+            // පැය භාගයේ Cooldown එක ඉවර වී ඇත්නම් Counter එක Reset කරන්න
+            if (lastCooldownTime && (currentTime - lastCooldownTime > cooldownDuration)) {
+                localStorage.removeItem('ad_cooldown_time');
+                localStorage.setItem('ad_click_count', '0');
+            }
+
+            // Cooldown එකේ පවතිනවා නම් Ad Open නොකරන්න
+            if (localStorage.getItem('ad_cooldown_time')) {
+                return;
+            }
+
+            let clickCount = parseInt(localStorage.getItem('ad_click_count') || '0');
+
+            if (clickCount < 3) {
+                // අදාළ Direct Link එක Open කිරීම
+                window.open(directLinks[clickCount], '_blank');
+                
+                clickCount++;
+                localStorage.setItem('ad_click_count', clickCount.toString());
+
+                // Click 3 සපිරුණු පසු පැය භාගයක Cooldown එකක් සක්‍රීය කරන්න
+                if (clickCount >= 3) {
+                    localStorage.setItem('ad_cooldown_time', currentTime.toString());
+                }
+            }
+        });
+
         // VAST Tag URLs
         const HILLTOP_VAST_URL = "https://unfolded-uncle.com/d.mxFhzKdVGrNEvEZgGgUg/eeImW9PutZbUDlikXPoTacrzTOCDKQZ0ONvD/UTtkNDzbMN4_NcDJQJ0NOsQk";
         const RICHADS_VAST_TEMPLATE = "http://16793.rtb.adp3.net/pre-roll-rp?pubid=995748&siteid=406408&ip=[IP]&ua=[USER_AGENT]";
@@ -249,13 +289,6 @@
             const ip = encodeURIComponent(userIP || '127.0.0.1');
             return RICHADS_VAST_TEMPLATE.replace('[IP]', ip).replace('[USER_AGENT]', ua);
         }
-
-        // Popunder Direct Link on First Click
-        document.addEventListener('click', function triggerDirectLink() {
-            const directUrl = "https://11745.xml.4armn.com/direct-link-v2?pubid=995748&siteid=406408&linkid=115741";
-            window.open(directUrl, '_blank');
-            document.removeEventListener('click', triggerDirectLink);
-        }, { once: true });
 
         const saveBtn = document.getElementById('saveBtn');
         const videoFeed = document.getElementById('videoFeed');
